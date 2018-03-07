@@ -71,10 +71,10 @@ public class DemoEntityProcessor implements EntityProcessor {
     /**
      * This method is invoked when a single entity has to be read.
      * In our example, this can be either a "normal" read operation, or a navigation:
-     * <p/>
+     * <p>
      * Example for "normal" read operation:
      * http://localhost:8080/DemoService/DemoService.svc/Products(1)
-     * <p/>
+     * <p>
      * Example for navigation
      * http://localhost:8080/DemoService/DemoService.svc/Products(1)/Category
      */
@@ -82,20 +82,20 @@ public class DemoEntityProcessor implements EntityProcessor {
         throws ODataApplicationException, SerializerException {
 
         EdmEntityType responseEdmEntityType = null; // we'll need this to build the ContextURL
-        Entity responseEntity = null; // required for serialization of the response body
         EdmEntitySet responseEdmEntitySet = null; // we need this for building the contextUrl
+        Entity responseEntity = null; // required for serialization of the response body
 
         // 1st step: retrieve the requested Entity: can be "normal" read operation, or navigation (to-one)
-        List<UriResource> resourceParts = uriInfo.getUriResourceParts();
-        int segmentCount = resourceParts.size();
+        final List<UriResource> resourceParts = uriInfo.getUriResourceParts();
+        final int segmentCount = resourceParts.size();
 
-        UriResource uriResource = resourceParts.get(0); // in our example, the first segment is the EntitySet
+        final UriResource uriResource = resourceParts.get(0); // in our example, the first segment is the EntitySet
         if (!(uriResource instanceof UriResourceEntitySet)) {
             throw new ODataApplicationException("Only EntitySet is supported", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ENGLISH);
         }
 
-        UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResource;
-        EdmEntitySet startEdmEntitySet = uriResourceEntitySet.getEntitySet();
+        final UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResource;
+        final EdmEntitySet startEdmEntitySet = uriResourceEntitySet.getEntitySet();
 
         // Analyze the URI segments
         if (segmentCount == 1) { // no navigation
@@ -103,28 +103,28 @@ public class DemoEntityProcessor implements EntityProcessor {
             responseEdmEntitySet = startEdmEntitySet; // since we have only one segment
 
             // 2. step: retrieve the data from backend
-            List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+            final List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
             responseEntity = mCRUDHandler.readEntityData(startEdmEntitySet, keyPredicates);
         } else if (segmentCount == 2) { // navigation
-            UriResource navSegment = resourceParts.get(1); // in our example we don't support more complex URIs
+            final UriResource navSegment = resourceParts.get(1); // in our example we don't support more complex URIs
             if (navSegment instanceof UriResourceNavigation) {
-                UriResourceNavigation uriResourceNavigation = (UriResourceNavigation) navSegment;
-                EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
-                responseEdmEntityType = edmNavigationProperty.getType();
+                final UriResourceNavigation uriResourceNavigation = (UriResourceNavigation) navSegment;
+                final EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
+                responseEdmEntityType = edmNavigationProperty.getType();//todo kriege ich das gewünschte?
                 // contextURL displays the last segment
                 responseEdmEntitySet = Util.getNavigationTargetEntitySet(startEdmEntitySet, edmNavigationProperty);
 
                 // 2nd: fetch the data from backend.
                 // e.g. for the URI: Products(1)/Category we have to find the correct Category entity
-                List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+                final List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
                 // e.g. for Products(1)/Category we have to find first the Products(1)
-                Entity sourceEntity = mCRUDHandler.readEntityData(startEdmEntitySet, keyPredicates);
+                final Entity sourceEntity = mCRUDHandler.readEntityData(startEdmEntitySet, keyPredicates);
 
                 // now we have to check if the navigation is
                 // a) to-one: e.g. Products(1)/Category
                 // b) to-many with key: e.g. Categories(3)/Products(5)
                 // the key for nav is used in this case: Categories(3)/Products(5)
-                List<UriParameter> navKeyPredicates = uriResourceNavigation.getKeyPredicates();
+                final List<UriParameter> navKeyPredicates = uriResourceNavigation.getKeyPredicates();
                 if (navKeyPredicates.isEmpty()) { // e.g. DemoService.svc/Products(1)/Category
                     responseEntity = mCRUDHandler.getRelatedEntity(sourceEntity, responseEdmEntityType);//TODO testen to many, also /Carriers(1)/Flights(1)
                 } else { // e.g. DemoService.svc/Categories(3)/Products(5)
@@ -142,11 +142,11 @@ public class DemoEntityProcessor implements EntityProcessor {
         }
 
         // 3. serialize
-        ContextURL contextUrl = ContextURL.with().entitySet(responseEdmEntitySet).suffix(Suffix.ENTITY).build();
-        EntitySerializerOptions opts = EntitySerializerOptions.with().contextURL(contextUrl).build();
+        final ContextURL contextUrl = ContextURL.with().entitySet(responseEdmEntitySet).suffix(Suffix.ENTITY).build();
+        final EntitySerializerOptions opts = EntitySerializerOptions.with().contextURL(contextUrl).build();
 
-        ODataSerializer serializer = this.odata.createSerializer(responseFormat);
-        SerializerResult serializerResult = serializer.entity(this.srvMetadata, responseEdmEntityType, responseEntity, opts);
+        final ODataSerializer serializer = this.odata.createSerializer(responseFormat);
+        final SerializerResult serializerResult = serializer.entity(this.srvMetadata, responseEdmEntityType, responseEntity, opts);
 
         // 4. configure the response object
         response.setContent(serializerResult.getContent());
@@ -166,7 +166,7 @@ public class DemoEntityProcessor implements EntityProcessor {
 
     /**
      * Example request:
-     * <p/>
+     * <p>
      * POST URL: http://localhost:8080/DemoService/DemoService.svc/Products<p>
      * Header: Content-Type: application/json; odata.metadata=minimal
      * Request body:
@@ -179,25 +179,25 @@ public class DemoEntityProcessor implements EntityProcessor {
     public void createEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType requestFormat, ContentType responseFormat)
         throws ODataApplicationException, DeserializerException, SerializerException {
         //1. Retrieve the entity type from the URI
-        EdmEntitySet edmEntitySet = Util.getEdmEntitySet(uriInfo);
-        EdmEntityType edmEntityType = edmEntitySet.getEntityType();
+        final EdmEntitySet edmEntitySet = Util.getEdmEntitySet(uriInfo);
+        final EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 
         //2. create the data in the backend
         //2.1 retrieve the payload from the POST request for the entity to create and deserialize it
-        InputStream requestInputStream = request.getBody();
-        ODataDeserializer deserializer = this.odata.createDeserializer(requestFormat);
-        DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
-        Entity requestEntity = result.getEntity();
+        final InputStream requestInputStream = request.getBody();
+        final ODataDeserializer deserializer = this.odata.createDeserializer(requestFormat);
+        final DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
+        final Entity requestEntity = result.getEntity();
         //2.2 do the creation in the backend, which returns the newly created entity
-        Entity createdEntity = mCRUDHandler.createEntityData(edmEntitySet, requestEntity);//TODO handle ungültigkeit
+        final Entity createdEntity = mCRUDHandler.createEntityData(edmEntitySet, requestEntity);//TODO handle ungültigkeit
 
         //3. serialize the response (we have to return the created entity)
-        ContextURL contextURL = ContextURL.with().entitySet(edmEntitySet).build();
+        final ContextURL contextURL = ContextURL.with().entitySet(edmEntitySet).build();
         //expand and select currently not supported
-        EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextURL).build();
+        final EntitySerializerOptions options = EntitySerializerOptions.with().contextURL(contextURL).build();
 
-        ODataSerializer serializer = this.odata.createSerializer(responseFormat);
-        SerializerResult serializedResponse = serializer.entity(srvMetadata, edmEntityType, createdEntity, options);
+        final ODataSerializer serializer = this.odata.createSerializer(responseFormat);
+        final SerializerResult serializedResponse = serializer.entity(srvMetadata, edmEntityType, createdEntity, options);
 
         //4. configure the response object
         response.setContent(serializedResponse.getContent());
@@ -213,22 +213,22 @@ public class DemoEntityProcessor implements EntityProcessor {
     public void updateEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo, ContentType requestFormat, ContentType responseFormat)
         throws ODataApplicationException, DeserializerException, SerializerException {
         //1. Retrieve the entity set which belongs to the requested entity
-        List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
+        final List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
         //Note: only in our example we can assume that the first segment is the EntitySet
-        UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
-        EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
-        EdmEntityType edmEntityType = edmEntitySet.getEntityType();
+        final UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
+        final EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
+        final EdmEntityType edmEntityType = edmEntitySet.getEntityType();
 
         // 2. update the data in backend
         // 2.1. retrieve the payload from the PUT request for the entity to be updated
-        InputStream requestInputStream = request.getBody();
-        ODataDeserializer deserializer = this.odata.createDeserializer(requestFormat);
-        DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
-        Entity requestEntity = result.getEntity();
+        final InputStream requestInputStream = request.getBody();
+        final ODataDeserializer deserializer = this.odata.createDeserializer(requestFormat);
+        final DeserializerResult result = deserializer.entity(requestInputStream, edmEntityType);
+        final Entity requestEntity = result.getEntity();
         // 2.2 do the modification in backend
-        List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+        final List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
         // Note that this updateEntity()-method is invoked for both PUT or PATCH operations
-        HttpMethod httpMethod = request.getMethod();
+        final HttpMethod httpMethod = request.getMethod();
         mCRUDHandler.updateEntityData(edmEntitySet, keyPredicates, requestEntity, httpMethod);
 
         //3. configure the response object
@@ -241,13 +241,13 @@ public class DemoEntityProcessor implements EntityProcessor {
 
     public void deleteEntity(ODataRequest request, ODataResponse response, UriInfo uriInfo) throws ODataApplicationException {
         // 1. Retrieve the entity set which belongs to the requested entity
-        List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
+        final List<UriResource> resourcePaths = uriInfo.getUriResourceParts();
         // Note: only in our example we can assume that the first segment is the EntitySet
-        UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
-        EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
+        final UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) resourcePaths.get(0);
+        final EdmEntitySet edmEntitySet = uriResourceEntitySet.getEntitySet();
 
         // 2. delete the data in backend
-        List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+        final List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
         mCRUDHandler.deleteEntityData(edmEntitySet, keyPredicates);
 
         //3. configure the response object

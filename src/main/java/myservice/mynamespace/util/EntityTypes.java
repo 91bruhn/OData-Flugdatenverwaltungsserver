@@ -37,6 +37,10 @@ import static myservice.mynamespace.util.EntityNames.DEPARTURE_TIME;
 import static myservice.mynamespace.util.EntityNames.DISTANCE_UNIT;
 import static myservice.mynamespace.util.EntityNames.DISTANCE____;
 import static myservice.mynamespace.util.EntityNames.ES_SFLIGHT_NAME;
+import static myservice.mynamespace.util.EntityNames.ET_SAPLANE_FQN;
+import static myservice.mynamespace.util.EntityNames.ET_SAPLANE_NAME;
+import static myservice.mynamespace.util.EntityNames.ET_SBOOK_FQN;
+import static myservice.mynamespace.util.EntityNames.ET_SBOOK_NAME;
 import static myservice.mynamespace.util.EntityNames.ET_SCARR_FQN;
 import static myservice.mynamespace.util.EntityNames.ET_SCARR_NAME;
 import static myservice.mynamespace.util.EntityNames.ET_SFLIGHT_FQN;
@@ -128,14 +132,29 @@ public class EntityTypes {
 
         // navigation property: many-to-one, null not allowed (product must have a category)
         //TODO hier one-to-many zb: setName: Mehrzahl setPartner: Einzahl
-        final CsdlNavigationProperty navPropCarrier = new CsdlNavigationProperty().setName(ET_SCARR_NAME).setType(ET_SCARR_FQN).setNullable(false).setPartner(
-            ES_SFLIGHT_NAME);
-        final CsdlNavigationProperty navPropConnections = new CsdlNavigationProperty().setName(ET_SPFLI_NAME)
+        final CsdlNavigationProperty navPropCarrier = new CsdlNavigationProperty().setName(ET_SCARR_NAME)
+                                                                                  .setType(ET_SCARR_FQN)
+                                                                                  .setPartner(ES_SFLIGHT_NAME)
+                                                                                  .setCollection(false)
+                                                                                  .setNullable(false);
+        final CsdlNavigationProperty navPropConnection = new CsdlNavigationProperty().setName(ET_SPFLI_NAME)
                                                                                       .setType(ET_SPFLI_FQN)
-                                                                                      .setNullable(false)
-                                                                                      .setPartner(ES_SFLIGHT_NAME);
+                                                                                      .setPartner(ET_SFLIGHT_NAME)
+                                                                                      .setCollection(false)
+                                                                                      .setNullable(false);//TODO checke ob doch coll?
 
-        final List<CsdlNavigationProperty> navPropList = new ArrayList<>(Arrays.asList(navPropCarrier, navPropConnections));
+        //implementieren
+        final CsdlNavigationProperty navPropPlane = new CsdlNavigationProperty().setName(ET_SAPLANE_NAME)
+                                                                                .setType(ET_SAPLANE_FQN)
+                                                                                .setPartner(ET_SFLIGHT_NAME)
+                                                                                .setCollection(false)
+                                                                                .setNullable(false);
+        final CsdlNavigationProperty navPropBooking = new CsdlNavigationProperty().setName(ET_SBOOK_NAME)
+                                                                                  .setType(ET_SBOOK_FQN)
+                                                                                  .setPartner(ET_SFLIGHT_NAME)
+                                                                                  .setCollection(false)
+                                                                                  .setNullable(false);
+        final List<CsdlNavigationProperty> navPropList = new ArrayList<>(Arrays.asList(navPropCarrier, navPropConnection, navPropPlane, navPropBooking));
 
         // configure EntityType
         entityType = new CsdlEntityType();
@@ -161,7 +180,6 @@ public class EntityTypes {
 
     public static CsdlEntityType getConnectionEntityType() {
         final CsdlEntityType entityType;
-
         // create EntityType properties
         final CsdlProperty carrierId = new CsdlProperty().setName(CARRIER_ID).setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());//TODO doppelt
         final CsdlProperty connectionId = new CsdlProperty().setName(CONNECTION_ID).setType(EdmPrimitiveTypeKind.String.getFullQualifiedName());//TODO doppelt
@@ -187,9 +205,30 @@ public class EntityTypes {
 
         // navigation property: one-to-many//TODO navigation stuff
         //TODO check hier und oben ob mehrzahl nicht vertauscht.
-        //        CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName(ES_SFLIGHT_NAME).setType(ET_SFLIGHT_FQN).setCollection(true).setPartner(
-        //            ES_SPFLI_NAME);
-        //        List<CsdlNavigationProperty> navPropList = new ArrayList<CsdlNavigationProperty>(Collections.singletonList(navProp));
+        //        final CsdlNavigationProperty navPropPlane = new CsdlNavigationProperty().setName(ET_SAPLANE_NAME)
+        //                                                                                .setType(ET_SAPLANE_FQN)
+        //                                                                                .setPartner(ET_SFLIGHT_NAME)
+        //                                                                                .setCollection(false)
+        //                                                                                .setNullable(false);//TODO Verbindung ermöglichen?
+
+        final CsdlNavigationProperty navPropFlights = new CsdlNavigationProperty().setName(ES_SFLIGHT_NAME)
+                                                                                      .setType(ET_SPFLI_FQN)
+                                                                                      .setPartner(ET_SPFLI_NAME)
+                                                                                      .setCollection(true)
+                                                                                      .setNullable(false);
+
+        //implementieren
+        final CsdlNavigationProperty navPropBooking = new CsdlNavigationProperty().setName(ET_SBOOK_NAME)
+                                                                                  .setType(ET_SBOOK_FQN)
+                                                                                  .setPartner(ET_SPFLI_NAME)
+                                                                                  .setCollection(false)
+                                                                                  .setNullable(false);
+        final CsdlNavigationProperty navPropCarrier = new CsdlNavigationProperty().setName(ET_SCARR_NAME)
+                                                                                  .setType(ET_SCARR_FQN)
+                                                                                  .setPartner(ET_SPFLI_NAME)
+                                                                                  .setCollection(false)
+                                                                                  .setNullable(false);//TODO Einzahl Connection?
+        final List<CsdlNavigationProperty> navPropList = new ArrayList<>(Arrays.asList(navPropFlights, navPropBooking, navPropCarrier));
 
         // configure EntityType
         entityType = new CsdlEntityType();
@@ -210,7 +249,7 @@ public class EntityTypes {
                                                flyType,
                                                period));
         entityType.setKey(Arrays.asList(propRefCarrierId, propRefConnectionId));
-        //        entityType.setNavigationProperties(navPropList);
+        entityType.setNavigationProperties(navPropList);
         return entityType;
     }
 
@@ -229,10 +268,10 @@ public class EntityTypes {
         entityType.setProperties(Arrays.asList(carrierId, carrierName, currency, url));
         entityType.setKey(Collections.singletonList(propRefCarrierId));
 
-        //navigation
-        final CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName(ES_SFLIGHT_NAME).setType(ET_SFLIGHT_FQN).setNullable(false).setPartner(
-            "Carrier");//TODO check Einzahl oder Mehrzahl
-        final List<CsdlNavigationProperty> navPropList = new ArrayList<>(Arrays.asList(navProp));
+        //navigation //TODO check Einzahl oder Mehrzahl
+        final CsdlNavigationProperty navProp = new CsdlNavigationProperty().setName(ES_SFLIGHT_NAME).setType(ET_SFLIGHT_FQN).setCollection(true).setNullable(
+            false).setPartner(ET_SCARR_NAME);
+        final List<CsdlNavigationProperty> navPropList = new ArrayList<>(Arrays.asList(navProp));//ES_SFLIGHT_NAME
         entityType.setNavigationProperties(navPropList);
 
         return entityType;

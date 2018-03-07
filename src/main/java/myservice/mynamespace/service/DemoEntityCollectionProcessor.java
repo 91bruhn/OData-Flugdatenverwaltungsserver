@@ -82,16 +82,17 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
         EntityCollection responseEntityCollection = null; // we'll need this to set the response body
 
         // 1st retrieve the requested EntitySet from the uriInfo (representation of the parsed URI)
-        List<UriResource> resourceParts = uriInfo.getUriResourceParts();
-        int segmentCount = resourceParts.size();
-        UriResource uriResource = resourceParts.get(0); // in our example, the first segment is the EntitySet todo debug
+        final List<UriResource> resourceParts = uriInfo.getUriResourceParts();
+        final int segmentCount = resourceParts.size();
+        //the first segment represents here the EntitySet
+        final UriResource uriResource = resourceParts.get(0);
 
         if (!(uriResource instanceof UriResourceEntitySet)) {
             throw new ODataApplicationException("Only EntitySet is supported", HttpStatusCode.NOT_IMPLEMENTED.getStatusCode(), Locale.ROOT);
         }
 
-        UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResource;
-        EdmEntitySet startEdmEntitySet = uriResourceEntitySet.getEntitySet();
+        final UriResourceEntitySet uriResourceEntitySet = (UriResourceEntitySet) uriResource;
+        final EdmEntitySet startEdmEntitySet = uriResourceEntitySet.getEntitySet();
 
         if (segmentCount == 1) {
             // this is the case for: DemoService/DemoService.svc/Categories TODO delete
@@ -101,21 +102,21 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
             responseEntityCollection = mCRUDHandler.readEntitySetData(startEdmEntitySet);
         } else if (segmentCount == 2) { // in case of navigation: DemoService.svc/Categories(3)/Products
             // in our example we don't support more complex URIs
-            UriResource lastSegment = resourceParts.get(1);
+            final UriResource lastSegment = resourceParts.get(1);
 
             if (lastSegment instanceof UriResourceNavigation) {
-                UriResourceNavigation uriResourceNavigation = (UriResourceNavigation) lastSegment;
-                EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
-                EdmEntityType targetEntityType = edmNavigationProperty.getType();
+                final UriResourceNavigation uriResourceNavigation = (UriResourceNavigation) lastSegment;
+                final EdmNavigationProperty edmNavigationProperty = uriResourceNavigation.getProperty();
+                final EdmEntityType targetEntityType = edmNavigationProperty.getType();
                 // from Categories(1) to Products
                 responseEdmEntitySet = Util.getNavigationTargetEntitySet(startEdmEntitySet, edmNavigationProperty);
 
                 // 2nd: fetch the data from backend
                 // first fetch the entity where the first segment of the URI points to
-                List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
+                final List<UriParameter> keyPredicates = uriResourceEntitySet.getKeyPredicates();
                 // e.g. for Categories(3)/Products we have to find the single entity: Category with ID 3
                 //wenn man über navigation geht und erstmal alle carriers raussucht, den gesuchten nimmt und dazu alle flüge sucht.
-                Entity sourceEntity = mCRUDHandler.readEntityData(startEdmEntitySet, keyPredicates);
+                final Entity sourceEntity = mCRUDHandler.readEntityData(startEdmEntitySet, keyPredicates);
                 // error handling for e.g. DemoService.svc/Categories(99)/Products
                 if (sourceEntity == null) {
                     throw new ODataApplicationException("Entity not found.", HttpStatusCode.NOT_FOUND.getStatusCode(), Locale.ROOT);
@@ -123,9 +124,7 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
                 // then fetch the entity collection where the entity navigates to
                 // note: we don't need to check uriResourceNavigation.isCollection(),
                 // because we are the EntityCollectionProcessor
-
-                //TODO vor�bergehend auskommentiert
-                //                responseEntityCollection = mCRUDHandler.getRelatedEntityCollection(sourceEntity, targetEntityType);
+                responseEntityCollection = mCRUDHandler.getRelatedEntityCollection(sourceEntity, targetEntityType);
 
             }
         } else { // this would be the case for e.g. Products(1)/Category/Products
@@ -134,13 +133,13 @@ public class DemoEntityCollectionProcessor implements EntityCollectionProcessor 
 
         // 3rd: create and configure a serializer
         //TODO responseEdmEntitySet might be null
-        ContextURL contextUrl = ContextURL.with().entitySet(responseEdmEntitySet).build();
+        final ContextURL contextUrl = ContextURL.with().entitySet(responseEdmEntitySet).build();
         final String id = request.getRawBaseUri() + "/" + responseEdmEntitySet.getName();
-        EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with().contextURL(contextUrl).id(id).build();
-        EdmEntityType edmEntityType = responseEdmEntitySet.getEntityType();
+        final EntityCollectionSerializerOptions opts = EntityCollectionSerializerOptions.with().contextURL(contextUrl).id(id).build();
+        final EdmEntityType edmEntityType = responseEdmEntitySet.getEntityType();
 
-        ODataSerializer serializer = odata.createSerializer(responseFormat);
-        SerializerResult serializerResult = serializer.entityCollection(this.srvMetadata, edmEntityType, responseEntityCollection, opts);//TODO crasht here!!!
+        final ODataSerializer serializer = odata.createSerializer(responseFormat);
+        final SerializerResult serializerResult = serializer.entityCollection(this.srvMetadata, edmEntityType, responseEntityCollection, opts);
 
         // 4th: configure the response object: set the body, headers and status code
         response.setContent(serializerResult.getContent());

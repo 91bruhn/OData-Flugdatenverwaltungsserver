@@ -93,8 +93,12 @@ public class DatabaseHandler {
 
     // ----FIND DATA----
 
+    public Object getById(Class clazz, String id){
+        return datastore.get(clazz, id);
+    }
+
     public boolean idTaken(Class clazz, String id) {
-        return datastore.get(clazz, id) != null;
+        return this.getById(clazz, id) != null;
     }
 
     public boolean idTaken(Class clazz, int id) {

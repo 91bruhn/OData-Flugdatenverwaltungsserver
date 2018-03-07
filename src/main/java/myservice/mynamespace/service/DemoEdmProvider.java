@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -123,7 +123,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
         // This method is invoked when displaying the service document at
         // e.g. http://localhost:8080/DemoService/DemoService.svc
         if (entityContainerName == null || entityContainerName.equals(CONTAINER)) {
-            CsdlEntityContainerInfo entityContainerInfo = new CsdlEntityContainerInfo();
+            final CsdlEntityContainerInfo entityContainerInfo = new CsdlEntityContainerInfo();
             entityContainerInfo.setContainerName(CONTAINER);
             return entityContainerInfo;
         }
@@ -134,11 +134,11 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
     @Override
     public List<CsdlSchema> getSchemas() {
         // create Schema
-        CsdlSchema schema = new CsdlSchema();
+        final CsdlSchema schema = new CsdlSchema();
         schema.setNamespace(NAMESPACE);
 
         // add EntityTypes
-        List<CsdlEntityType> entityTypes = new ArrayList<>();
+        final List<CsdlEntityType> entityTypes = new ArrayList<>();
         entityTypes.add(getEntityType(ET_SFLIGHT_FQN));
         entityTypes.add(getEntityType(ET_SPFLI_FQN));
         entityTypes.add(getEntityType(ET_SAPLANE_FQN));
@@ -150,7 +150,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
         schema.setEntityContainer(getEntityContainer());
 
         // finally
-        List<CsdlSchema> schemas = new ArrayList<>();
+        final  List<CsdlSchema> schemas = new ArrayList<>();
         schemas.add(schema);
 
         return schemas;
@@ -159,7 +159,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
     @Override
     public CsdlEntityContainer getEntityContainer() {
         // create EntitySets
-        List<CsdlEntitySet> entitySets = new ArrayList<>();
+        final List<CsdlEntitySet> entitySets = new ArrayList<>();
         entitySets.add(getEntitySet(CONTAINER, ES_SFLIGHT_NAME));
         entitySets.add(getEntitySet(CONTAINER, ES_SPFLI_NAME));
         entitySets.add(getEntitySet(CONTAINER, ES_SAPLANE_NAME));
@@ -167,7 +167,7 @@ public class DemoEdmProvider extends CsdlAbstractEdmProvider {
         entitySets.add(getEntitySet(CONTAINER, ES_SCARR_NAME));
 
         // create EntityContainer
-        CsdlEntityContainer entityContainer = new CsdlEntityContainer();
+        final CsdlEntityContainer entityContainer = new CsdlEntityContainer();
         entityContainer.setName(CONTAINER_NAME);
         entityContainer.setEntitySets(entitySets);
 

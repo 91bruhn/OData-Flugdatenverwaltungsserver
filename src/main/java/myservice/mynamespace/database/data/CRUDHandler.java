@@ -183,6 +183,22 @@ public class CRUDHandler {//Service?
         return entity;
     }
 
+    //    private String id(Property idProperty){
+    //        if (idProperty != null) {
+    //            final String planeType = (String) idProperty.getValue();
+    //
+    //            if (idTaken(Saplane.class, planeType)) {
+    //                //LOG plane already defined in db
+    //                return null;
+    //            } else {
+    //                id = planeType;
+    //            }
+    //            idProperty.setValue(ValueType.PRIMITIVE, id);//TODO was macht das?
+    //        } else {
+    //            return null;
+    //        }
+    //    }
+
     //übergebene id muss vorhanden und gültig sein ansonsten null --> service sollte folgenden http
     private Entity createPlane(EdmEntityType edmEntityType, Entity entity) {
         final Property idProperty = entity.getProperty(EntityNames.PLANE_TYPE);
@@ -380,13 +396,12 @@ public class CRUDHandler {//Service?
       /* INTERNAL */
 
     ////////////////////////Navigation////////////////////////
-    //TODO vorübergehend auskommentiert
     public Entity getRelatedEntity(Entity entity, EdmEntityType relatedEntityType) {
         final EntityCollection collection = getRelatedEntityCollection(entity, relatedEntityType);
         if (collection.getEntities().isEmpty()) {
             return null;
         }
-        return collection.getEntities().get(0);
+        return collection.getEntities().get(0);//TODO check, ists immer das 1.?
     }
 
     public Entity getRelatedEntity(Entity entity, EdmEntityType relatedEntityType, List<UriParameter> keyPredicates) throws ODataApplicationException {
@@ -413,21 +428,24 @@ public class CRUDHandler {//Service?
         return navigationTargetEntityCollection;
     }
 
+    //TODO implementiere um von flügen den dazugehörigen carrier zu bekommen
     private EntityCollection FlightCarrier(Entity sourceEntity, EntityCollection navigationTargetEntityCollection) {//TODO name
         // relation Products->Category (result all categories) todo überarbeite kommentar
-        final int productID = (Integer) sourceEntity.getProperty("ID").getValue();
-
-        //        if (productID == 1 || productID == 2) {
-        //            navigationTargetEntityCollection.getEntities().add(categoryList.get(0));
-        //        } else if (productID == 3 || productID == 4) {
-        //            navigationTargetEntityCollection.getEntities().add(categoryList.get(1));
-        //        } else if (productID == 5 || productID == 6) {
-        //            navigationTargetEntityCollection.getEntities().add(categoryList.get(2));
-        //        }
+        final String carrierCode = (String) sourceEntity.getProperty(CARRIER_ID).getValue();
+        final Scarr scarr = (Scarr) mDatabaseHandler.getById(Scarr.class, carrierCode);
+        final Entity carrier = DataTransformator.transformScarrToEntity(scarr);
+        navigationTargetEntityCollection.getEntities().add(carrier);
 
         return navigationTargetEntityCollection;
     }
 
+    //        if (productID == 1 || productID == 2) {
+    //            navigationTargetEntityCollection.getEntities().add(categoryList.get(0));
+    //        } else if (productID == 3 || productID == 4) {
+    //            navigationTargetEntityCollection.getEntities().add(categoryList.get(1));
+    //        } else if (productID == 5 || productID == 6) {
+    //            navigationTargetEntityCollection.getEntities().add(categoryList.get(2));
+    //        }
     private EntityCollection CarrierFlight(Entity sourceEntity, EntityCollection navigationTargetEntityCollection) {//TODO name
         // relation Category->Products (result all products)
         final String carrierCode = (String) sourceEntity.getProperty(CARRIER_ID).getValue();

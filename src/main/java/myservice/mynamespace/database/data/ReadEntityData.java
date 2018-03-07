@@ -66,7 +66,6 @@ public class ReadEntityData {
     }
 
     public static Entity getBooking(EdmEntityType edmEntityType, List<UriParameter> keyParams) throws ODataApplicationException {
-
         // the list of entities at runtime
         final EntityCollection entitySet = ReadEntitySetData.getBookings();
 
